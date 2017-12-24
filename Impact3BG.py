@@ -22,6 +22,7 @@ class Impact3Supporter(DMWrapper):
         self.alive = True
         self.task_queue = Queue(maxsize=10)
         self.factory = None
+        self.factory_instance = None
         self.factories = [SupportDogFeedTeamwork]
         self.callbacks = {}
 
@@ -78,6 +79,7 @@ class Impact3Supporter(DMWrapper):
                     for fn, func in check_methods.get('utils', {}).items():
                         check_methods.get('utils')[fn] = partial(func, self)
                 factory = f()
+                self.factory_instance = factory
                 setattr(factory, 'impact3', self)
                 if use_callback:
                     self.bind_callback(factory)

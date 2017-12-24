@@ -35,9 +35,10 @@ class SupportDogFeedTeamwork(BaseFactory):
         self.on_battle = False
 
     def run(self, instance=None, *args, **kwargs):
-        while self.page_list:
+        while self.page_list and not self.over:
             page = self.page_list.pop(0)
             instance.check_page(page)
+        self.impact3.alive = False
 
     def home(self):
         time.sleep(0.2)
@@ -94,7 +95,9 @@ class SupportDogFeedTeamwork(BaseFactory):
                     or self.impact3.compare_color(633,640, 0.99, 'a2d23b'):
                 self.impact3.click(646, 645)
                 while not self.impact3.compare_color(966, 344, 0.99, '114469') and time.time() - pre < 100:
-                    if self.impact3.compare_color(694,656, 0.99, 'ffde4a'):
+                    if self.impact3.compare_color(694,656, 0.99, 'ffde4a') or self.impact3.compare_color\
+                                (646,645, 0.99, 'a7d73a') or self.impact3.compare_color(769,675, 0.99, 'ffe14b')\
+                            or self.impact3.compare_color(633,640, 0.99, 'a2d23b'):
                         self.impact3.click(646, 645)
                     time.sleep(1)
                 if time.time() - pre <= 100:
@@ -104,9 +107,13 @@ class SupportDogFeedTeamwork(BaseFactory):
             time.sleep(1)
 
     def battle(self):
+        pre = time.time()
         logger.info('检查是否进入战斗界面的读条')
-        while not self.impact3.compare_color(728,670, 1, '00d3ff'):
+        while not self.impact3.compare_color(728,670, 1, '00d3ff') and time.time() - pre < 100:
             time.sleep(1)
+        if time.time() - pre > 100:
+            logger.info('进入战斗界面失败')
+            return
         logger.info('battle start~!')
         self.impact3.press_key('w')
         time.sleep(0.1)
@@ -163,6 +170,10 @@ def check_advanced_equipment(impact3):
 @page_checker_register
 def check_choose(impact3):
     logger.info('开始检查是否进入选人界面')
+    if impact3.compare_color(1020,666, '686e73'):
+        logger.info('协作次数已经到达上限')
+        impact3.factory_instance.over = True
+        return False
     pre = time.time()
     while time.time() - pre < 60:
         if impact3.compare_color(769,675, 'ffe14b') or impact3.compare_color(628,490, 'a7e52e') or impact3.compare_color(767,660, '545047')\
