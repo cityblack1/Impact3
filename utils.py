@@ -37,6 +37,7 @@ def false_to_retry(retry=5, broken=3):
                 result = func(*args, **kwargs)
                 retry -= 1
                 time.sleep(0.5)
+            retry = 5 if result else retry
             if retry == 0:
                 broken_down += 1
             return result

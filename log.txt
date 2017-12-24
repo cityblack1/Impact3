@@ -3015,3 +3015,65 @@ NoneType: None
 2017-12-24 16:53:16,940 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is True
 2017-12-24 16:53:16,941 - MainThread - impact3 - 6 - __init__ - ERROR - InvalidCheckMethod: the check method of Page dog_feed  can't be found
 NoneType: None
+2017-12-24 17:28:51,792 - MainThread - impact3 - 55 - check_page - INFO - the result of check_home is False
+2017-12-24 17:28:51,792 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面home, 剩余次数5
+2017-12-24 17:40:41,412 - MainThread - impact3 - 41 - home - INFO - 当前是home页面, 点击出击按钮
+2017-12-24 17:40:41,503 - MainThread - impact3 - 91 - wrapper - INFO - home页面的回调函数执行成功
+2017-12-24 17:40:41,503 - MainThread - impact3 - 55 - check_page - INFO - the result of check_home is True
+2017-12-24 17:40:42,410 - MainThread - impact3 - 55 - check_page - INFO - the result of check_world_map is False
+2017-12-24 17:40:42,410 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面world_map, 剩余次数5
+2017-12-24 17:40:42,712 - MainThread - impact3 - 49 - world_map - INFO - 尝试点击回到世界地图
+2017-12-24 17:40:42,802 - MainThread - impact3 - 91 - wrapper - INFO - world_map页面的回调函数执行成功
+2017-12-24 17:40:42,802 - MainThread - impact3 - 55 - check_page - INFO - the result of check_world_map is True
+2017-12-24 17:40:43,609 - MainThread - impact3 - 55 - check_page - INFO - the result of check_download_music is False
+2017-12-24 17:40:43,609 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面download_music?, 剩余次数4
+2017-12-24 17:40:44,410 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:40:44,410 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面teamwork, 剩余次数3
+2017-12-24 17:40:44,711 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:40:45,211 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面teamwork, 剩余次数2
+2017-12-24 17:40:45,511 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:40:46,012 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面teamwork, 剩余次数1
+2017-12-24 17:40:46,312 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:40:47,112 - MainThread - impact3 - 55 - check_page - INFO - the result of check_dog_feed is False
+2017-12-24 17:40:47,112 - MainThread - impact3 - 6 - __init__ - ERROR - InvalidCheckMethod: the check method of Page advanced_equipment  can't be found
+NoneType: None
+2017-12-24 17:41:15,535 - MainThread - impact3 - 41 - home - INFO - 当前是home页面, 点击出击按钮
+2017-12-24 17:41:15,626 - MainThread - impact3 - 91 - wrapper - INFO - home页面的回调函数执行成功
+2017-12-24 17:41:15,626 - MainThread - impact3 - 55 - check_page - INFO - the result of check_home is True
+2017-12-24 17:41:16,528 - MainThread - impact3 - 55 - check_page - INFO - the result of check_world_map is False
+2017-12-24 17:41:16,528 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面world_map, 剩余次数5
+2017-12-24 17:41:16,829 - MainThread - impact3 - 49 - world_map - INFO - 尝试点击回到世界地图
+2017-12-24 17:41:16,920 - MainThread - impact3 - 91 - wrapper - INFO - world_map页面的回调函数执行成功
+2017-12-24 17:41:16,921 - MainThread - impact3 - 55 - check_page - INFO - the result of check_world_map is True
+2017-12-24 17:41:17,724 - MainThread - impact3 - 55 - check_page - INFO - the result of check_download_music is False
+2017-12-24 17:41:17,724 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面download_music?, 剩余次数4
+2017-12-24 17:41:18,525 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:41:18,525 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面teamwork, 剩余次数3
+2017-12-24 17:41:18,826 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:41:19,326 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面teamwork, 剩余次数2
+2017-12-24 17:41:19,628 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:41:20,128 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面teamwork, 剩余次数1
+2017-12-24 17:41:20,429 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:41:21,230 - MainThread - impact3 - 55 - check_page - INFO - the result of check_dog_feed is False
+2017-12-24 17:41:21,230 - MainThread - impact3 - 6 - __init__ - ERROR - InvalidCheckMethod: the check method of Page advanced_equipment  can't be found
+NoneType: None
+2017-12-24 17:42:54,713 - MainThread - impact3 - 41 - home - INFO - 当前是home页面, 点击出击按钮
+2017-12-24 17:42:54,804 - MainThread - impact3 - 91 - wrapper - INFO - home页面的回调函数执行成功
+2017-12-24 17:42:54,804 - MainThread - impact3 - 55 - check_page - INFO - the result of check_home is True
+2017-12-24 17:42:55,705 - MainThread - impact3 - 55 - check_page - INFO - the result of check_world_map is False
+2017-12-24 17:42:55,706 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面world_map, 剩余次数5
+2017-12-24 17:42:56,006 - MainThread - impact3 - 49 - world_map - INFO - 尝试点击回到世界地图
+2017-12-24 17:42:56,097 - MainThread - impact3 - 91 - wrapper - INFO - world_map页面的回调函数执行成功
+2017-12-24 17:42:56,097 - MainThread - impact3 - 55 - check_page - INFO - the result of check_world_map is True
+2017-12-24 17:42:56,901 - MainThread - impact3 - 55 - check_page - INFO - the result of check_download_music is False
+2017-12-24 17:42:56,902 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面download_music?, 剩余次数4
+2017-12-24 17:42:57,702 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:42:57,703 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面teamwork, 剩余次数3
+2017-12-24 17:42:58,003 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:42:58,503 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面teamwork, 剩余次数2
+2017-12-24 17:42:58,804 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:42:59,304 - MainThread - impact3 - 36 - inner - INFO - 尝试重新检查页面teamwork, 剩余次数1
+2017-12-24 17:42:59,606 - MainThread - impact3 - 55 - check_page - INFO - the result of check_teamwork is False
+2017-12-24 17:43:00,406 - MainThread - impact3 - 55 - check_page - INFO - the result of check_dog_feed is False
+2017-12-24 17:43:00,406 - MainThread - impact3 - 6 - __init__ - ERROR - InvalidCheckMethod: the check method of Page advanced_equipment  can't be found
+NoneType: None

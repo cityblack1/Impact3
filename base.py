@@ -45,6 +45,17 @@ class DMWrapper(object):
         time.sleep(temp)
         self.dm.LeftClick()
 
+    def drag(self, x1, y1, x2, y2):
+        '拖拽，从x1,y1到x2,y2'
+        self.dm.MoveTo(x1, y1)
+        time.sleep(1)
+        self.dm.LeftDown()
+        time.sleep(10)
+        self.dm.MoveTo(x2, y2)
+        time.sleep(1)
+        self.dm.LeftUp()
+        time.sleep(1)
+        
     def press_key(self, key_str=''):
         self.dm.KeyPress(int(self.key_map[key_str]))
 
