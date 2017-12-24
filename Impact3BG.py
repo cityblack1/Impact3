@@ -5,7 +5,7 @@ import re
 from queue import Queue
 from base import DMWrapper
 from supporters.dogfeed import SupportDogFeedTeamwork
-from utils import check_methods, specific_check, wrap_callbacks, false_to_retry, wrap_run
+from utils import check_methods, specific_check, wrap_callbacks, false_to_retry, wrap_run, index_super
 from functools import partial
 from exceptions import InvalidCheckMethod, NoPageListFound
 from logger import logger
@@ -37,8 +37,10 @@ class Impact3Supporter(DMWrapper):
     @false_to_retry(5)
     def check_page(self, page, callback=''):
         """当将callback传递为None时不会调用callback, 否则一定会在result为真的时候调用它对应的callback"""
-        if self.pages.index(page) <= (self.pages.index(self.page) if self.page else -1):
-            return None
+        if index_super(self.pages, page) <= (index_super(self.pages, self.page) if self.page else -1):
+            if page in self.pages[0]:
+                self.page = page
+            else:return None
         r_page, page = page, re.sub('\d+$|\W+$|\d+\W+$', '', page)
         func = check_methods.get(self.factory, {}).get('check_' + page) or check_methods['utils'].get('check_' + page)
         if r_page.endswith('?'):
@@ -46,10 +48,11 @@ class Impact3Supporter(DMWrapper):
         if func:
             result, callback = func(), wrap_callbacks(r_page, self.callbacks.get(self.factory, {}).get(page.replace('?', ''), callback) if callback is not None else None)
             if result and r_page.endswith('?') and r_page in self.pages:
-                if self.pages.index(page) < self.pages.index(self.page):
+                callback()
+                if index_super(self.pages, r_page) < index_super(self.pages, self.page):
                     return None
                 return result
-            time.sleep(0.3)
+            time.sleep(0.1)
             callback() if callback and result else None
             self.page = r_page if result else self.page or page
             logger.info('the result of check_{} is {}'.format(page, str(result)))

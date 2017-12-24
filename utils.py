@@ -26,6 +26,13 @@ def wrap_run(self):
     return outer
 
 
+def index_super(li, em):
+    try:
+        return li.index(em)
+    except:
+        return li.index(em+'?')
+
+
 def false_to_retry(retry=5, broken=3):
     def outer(func):
         def inner(*args, **kwargs):

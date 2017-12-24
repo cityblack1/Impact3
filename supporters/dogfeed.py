@@ -26,7 +26,7 @@ from logger import logger
 class SupportDogFeedTeamwork(BaseFactory):
     """刷联机模式的狗粮"""
     page_list = ['home', 'download_music?', 'home?', 'world_map', 'teamwork', 'dog_feed', 'advanced_equipment',
-                 'choose']
+                 'choose', 'battle']
     use_callback = True
     use_check_method = True
 
@@ -71,7 +71,7 @@ class SupportDogFeedTeamwork(BaseFactory):
         self.impact3.click(856,428)
 
     def advanced_equipment(self):
-        logger.info('')
+        logger.info('进入协助作战页面')
         time.sleep(0.2)
         self.impact3.click(966,366)
         time.sleep(1)
@@ -83,34 +83,55 @@ class SupportDogFeedTeamwork(BaseFactory):
             break
 
     def choose(self):
-        logger.info('进入选人界面')
+        logger.info('进入选人界面, 并装载新一轮的任务')
+        self.page_list += self.impact3.pages
+        print(self.page_list)
         pre = time.time()
         while time.time() - pre < 60:
-            time.sleep(2)
+            time.sleep(0.5)
             if self.impact3.compare_color(646,645, 0.99, 'a7d73a') \
-                    or self.impact3.compare_color(769,675, 0.99, 'ffe14b'):
-                self.impact3.click(646,645)
+                    or self.impact3.compare_color(769,675, 0.99, 'ffe14b')\
+                    or self.impact3.compare_color(633,640, 0.99, 'a2d23b'):
+                self.impact3.click(646, 645)
                 while not self.impact3.compare_color(966, 344, 0.99, '114469') and time.time() - pre < 100:
+                    if self.impact3.compare_color(694,656, 0.99, 'ffde4a'):
+                        self.impact3.click(646, 645)
                     time.sleep(1)
                 if time.time() - pre <= 100:
                     self.impact3.on_battle = True
                     logger.info('即将开始战斗')
+                    break
             time.sleep(1)
 
     def battle(self):
+        logger.info('检查是否进入战斗界面的读条')
         while not self.impact3.compare_color(728,670, 1, '00d3ff'):
             time.sleep(1)
+        logger.info('battle start~!')
         self.impact3.press_key('w')
         time.sleep(0.1)
         self.impact3.press_key('w')
         time.sleep(0.1)
         self.impact3.press_key('w')
-        while not self.impact3.compare_color(699,662, 0.99, 'ffde4a'):
+        while not self.impact3.compare_color(640, 57, 0.99, '7900b8') and not self.impact3.compare_color(636, 579, 0.99, 'ffdf4d'):
             self.impact3.press_key('2')
-            time.sleep(0.1)
+            time.sleep(0.03)
             self.impact3.press_key('j')
-            time.sleep(0.1)
-        self.impact3.click(699,662)
+            time.sleep(0.03)
+        logger.info('战斗结束')
+        logger.info('点击点击')
+        while not self.impact3.compare_color(1143,657, 0.99, 'ffe14b'):
+            self.impact3.click(694, 656)
+            time.sleep(1)
+        time.sleep(1)
+        while not self.impact3.compare_color(61,581, 0.99, 'ffffff'):
+            self.impact3.click(1143,657)
+            time.sleep(1)
+        logger.info('本轮结束, 即将开始下一轮')
+        print(self.page_list)
+        self.on_battle = False
+
+
 
 
 @page_checker_register
@@ -135,14 +156,18 @@ def check_dog_feed(impact3):
 
 @page_checker_register
 def check_advanced_equipment(impact3):
+    logger.info('开始检查高级装备页面')
     return impact3.compare_color(800,100, '0f6d93') and impact3.compare_color(317,383, 'ffffff')
 
 
 @page_checker_register
 def check_choose(impact3):
+    logger.info('开始检查是否进入选人界面')
     pre = time.time()
     while time.time() - pre < 60:
-        if impact3.compare_color(769,675, 'ffe14b') or  impact3.compare_color(628,490, 'a7e52e') or impact3.compare_color(767,660, '545047'):
+        if impact3.compare_color(769,675, 'ffe14b') or impact3.compare_color(628,490, 'a7e52e') or impact3.compare_color(767,660, '545047')\
+                or impact3.compare_color(633,640, 'a2d23b'):
+            logger.info('进入选人界面')
             return True
         time.sleep(1)
     return False
@@ -150,9 +175,6 @@ def check_choose(impact3):
 
 @page_checker_register
 def check_battle(impact3):
-    return impact3.compare_color(324,368, '10d8ff') and impact3.compare_color(93,205, '06314b')
-
-
-@page_checker_register
-def check_battle(impact3):
+    logger.info('开始检查是否进入战斗界面')
+    print(impact3.on_battle)
     return True if impact3.on_battle else False
