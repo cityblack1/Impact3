@@ -70,11 +70,19 @@ class SupportDogFeedTeamwork(BaseFactory):
         self.impact3.press_key('e')
         time.sleep(0.5)
         self.impact3.click(856,428)
+        # self.impact3.click(1101,416)
+        # time.sleep(2)
+        # self.impact3.click(947,416)
 
     def advanced_equipment(self):
         logger.info('进入协助作战页面')
         time.sleep(0.2)
-        self.impact3.click(966,366)
+        # self.impact3.click(966,366)
+        self.impact3.click(637,371)
+        # self.impact3.click(1101,416)
+        # time.sleep(2)
+        # self.impact3.click(947,416)
+
         time.sleep(1)
         if self.impact3.compare_color(960,376, 0.99, '798ba1'):
             self.impact3.click(960,376)
@@ -90,20 +98,15 @@ class SupportDogFeedTeamwork(BaseFactory):
         pre = time.time()
         while time.time() - pre < 60:
             time.sleep(0.5)
-            if self.impact3.compare_color(646,645, 0.99, 'a7d73a') \
-                    or self.impact3.compare_color(769,675, 0.99, 'ffe14b')\
-                    or self.impact3.compare_color(633,640, 0.99, 'a2d23b'):
-                self.impact3.click(646, 645)
-                while not self.impact3.compare_color(966, 344, 0.99, '114469') and time.time() - pre < 100:
-                    if self.impact3.compare_color(694,656, 0.99, 'ffde4a') or self.impact3.compare_color\
-                                (646,645, 0.99, 'a7d73a') or self.impact3.compare_color(769,675, 0.99, 'ffe14b')\
-                            or self.impact3.compare_color(633,640, 0.99, 'a2d23b'):
-                        self.impact3.click(646, 645)
-                    time.sleep(1)
-                if time.time() - pre <= 100:
-                    self.impact3.on_battle = True
-                    logger.info('即将开始战斗')
-                    break
+            while not self.impact3.compare_color(728,670, 1, '00d3ff') and time.time() - pre < 100:
+                if self.impact3.compare_color(694,656, 0.98, 'ffde4a') or self.impact3.compare_color(769,675, 0.98, 'ffe14b')\
+                        or self.impact3.compare_color(635,640, 0.96, '9fd03b'):
+                    self.impact3.click(646, 645)
+                time.sleep(1)
+            if time.time() - pre <= 100:
+                self.impact3.on_battle = True
+                logger.info('即将开始战斗')
+                break
             time.sleep(1)
 
     def battle(self):
@@ -137,8 +140,6 @@ class SupportDogFeedTeamwork(BaseFactory):
         logger.info('本轮结束, 即将开始下一轮')
         print(self.page_list)
         self.on_battle = False
-
-
 
 
 @page_checker_register
@@ -187,5 +188,4 @@ def check_choose(impact3):
 @page_checker_register
 def check_battle(impact3):
     logger.info('开始检查是否进入战斗界面')
-    print(impact3.on_battle)
     return True if impact3.on_battle else False

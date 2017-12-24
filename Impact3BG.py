@@ -41,7 +41,8 @@ class Impact3Supporter(DMWrapper):
         if index_super(self.pages, page) <= (index_super(self.pages, self.page) if self.page else -1):
             if page in self.pages[0]:
                 self.page = page
-            else:return None
+            else:
+                return None
         r_page, page = page, re.sub('\d+$|\W+$|\d+\W+$', '', page)
         func = check_methods.get(self.factory, {}).get('check_' + page) or check_methods['utils'].get('check_' + page)
         if r_page.endswith('?'):
