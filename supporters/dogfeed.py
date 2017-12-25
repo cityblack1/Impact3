@@ -75,9 +75,10 @@ class SupportDogFeedTeamwork(BaseFactory):
         # self.impact3.click(947,416)
 
     def advanced_equipment(self):
+        pre = time.time()
         logger.info('进入协助作战页面')
         time.sleep(0.2)
-        # self.impact3.click(966,366)
+        #self.impact3.click(966,366)
         self.impact3.click(637,371)
         # self.impact3.click(1101,416)
         # time.sleep(2)
@@ -87,9 +88,8 @@ class SupportDogFeedTeamwork(BaseFactory):
         if self.impact3.compare_color(960,376, 0.99, '798ba1'):
             self.impact3.click(960,376)
             time.sleep(1)
-        while self.impact3.compare_color(1226,681, 0.99, 'ffe14b'):
+        while self.impact3.compare_color(1226,681, 0.99, 'ffe14b') and time.time() - pre < 6:
             self.impact3.click(1226,681)
-            break
 
     def choose(self):
         logger.info('进入选人界面, 并装载新一轮的任务')
@@ -104,7 +104,7 @@ class SupportDogFeedTeamwork(BaseFactory):
                     self.impact3.click(646, 645)
                 time.sleep(1)
             if time.time() - pre <= 100:
-                self.impact3.on_battle = True
+                self.on_battle = True
                 logger.info('即将开始战斗')
                 break
             time.sleep(1)
@@ -124,10 +124,12 @@ class SupportDogFeedTeamwork(BaseFactory):
         time.sleep(0.1)
         self.impact3.press_key('w')
         while not self.impact3.compare_color(640, 57, 0.99, '7900b8') and not self.impact3.compare_color(636, 579, 0.99, 'ffdf4d'):
+            self.impact3.press_key('w')
+            time.sleep(0.03)
             self.impact3.press_key('2')
-            time.sleep(0.03)
+            time.sleep(0.02)
             self.impact3.press_key('j')
-            time.sleep(0.03)
+            time.sleep(0.08)
         logger.info('战斗结束')
         logger.info('点击点击')
         while not self.impact3.compare_color(1143,657, 0.99, 'ffe14b'):
@@ -170,6 +172,8 @@ def check_advanced_equipment(impact3):
 
 @page_checker_register
 def check_choose(impact3):
+    if impact3.factory_instance.page_list[0] == impact3.pages[0]:
+        return False
     logger.info('开始检查是否进入选人界面')
     if impact3.compare_color(1020,666, '686e73'):
         logger.info('协作次数已经到达上限')
@@ -177,15 +181,17 @@ def check_choose(impact3):
         return False
     pre = time.time()
     while time.time() - pre < 60:
-        if impact3.compare_color(769,675, 'ffe14b') or impact3.compare_color(628,490, 'a7e52e') or impact3.compare_color(767,660, '545047')\
-                or impact3.compare_color(633,640, 'a2d23b'):
+        if impact3.compare_color(694,656,0.8, 'ffde4a') or impact3.compare_color(769,675,0.8, 'ffe14b') or impact3.compare_color(635,640, 0.8,'9fd03b')\
+                or impact3.compare_color(633,640,0.8, 'a2d23b'):
             logger.info('进入选人界面')
             return True
         time.sleep(1)
+    impact3.factory_instance.page_list = impact3.pages
+    impact3.factory_instance.on_battle = False
     return False
 
 
 @page_checker_register
 def check_battle(impact3):
     logger.info('开始检查是否进入战斗界面')
-    return True if impact3.on_battle else False
+    return True if impact3.factory_instance.on_battle else False
