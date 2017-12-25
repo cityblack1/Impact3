@@ -7,19 +7,29 @@ import inspect
 
 from logger import logger
 from exceptions import HandlerError, SizeError, PluginError
-from abc import ABCMeta, abstractmethod
+from utils import page_checker_register
 
 
 class BaseFactory:
-    __metaclass__ = ABCMeta
+    page_list = []
+    use_callback = True
+    use_check_method = True
 
-    def __init__(self):
-        self.impact3 = None
+    def __enter__(self):
         self.over = False
+        return self
 
-    @abstractmethod
-    def run(self, instance, *args, **kwargs): pass
+    def __init__(self, impact3=None):
+        self.impact3 = impact3
+        self.over = True
 
+    def run(self, *args, **kwargs):
+        while not self.over and self.page_list:
+            for page in self.page_list:
+                self.impact3.check_page(page)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.over = True
 
 class DMWrapper(object):
     """MuMu 模拟器   720 宽 * 1280高"""
@@ -94,10 +104,13 @@ class DMWrapper(object):
                 except Exception as e:
                     raise HandlerError(str(e), 'catch a exception while reloading handler.')
             logger.debug('succeed finding handler')
-        if not self.bind:
-            self.bind = True
-            self.dm.BindWindow(self.hwnd, 'dx2', 'dx', 'dx', 0)
-            logger.debug('succeed fetching and binding')
+        try:
+            if not self.bind:
+                self.bind = True
+                self.dm.BindWindow(self.hwnd, 'dx2', 'dx', 'dx', 0)
+                logger.debug('succeed fetching and binding')
+        except Exception as e:
+            raise HandlerError(str(e), 'can\'t bind the handler, because no handler found')
 
     def load_damo(self):
         if self.dm is None:
@@ -120,3 +133,8 @@ class DMWrapper(object):
             raise SizeError('size error, 1280 * 720 required')
         return self.width / 1280
 
+
+@page_checker_register
+def check_home(impact3):
+    return impact3.compare_color(1210, 676, 1, 'fd8a82') and impact3.compare_color(1226, 692, 0.8, '8ab33e') and \
+           not impact3.compare_color(734, 202, 1, '00c0fc') and not impact3.compare_color(747, 496, 1, 'ffe14b')

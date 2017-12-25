@@ -30,7 +30,13 @@ def index_super(li, em):
     try:
         return li.index(em)
     except:
-        return li.index(em+'?')
+        try:
+            return li.index(em[:-2])
+        except:
+            try:
+                return li.index(em+'?')
+            except:
+                return -1
 
 
 def false_to_retry(retry=5, broken=3):
@@ -52,20 +58,27 @@ def false_to_retry(retry=5, broken=3):
     return outer
 
 
-def page_checker_register(func):
-    def bool_dispatcher(f):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            self = args[0]
-            if f(*args, **kwargs):
-                self.page = f.__name__.split('check_')[-1]
-                return True
-            return False
-        return wrapper
-    module_name = os.path.basename(func.__globals__['__file__'])[:-3]
-    func = bool_dispatcher(func)
-    check_methods.setdefault(module_name, {})
-    check_methods[module_name][func.__name__] = func
+def page_checker_register(retry_times=3, check_pre_while_false=True, timeout=0):
+
+    def outer(fun):
+        def bool_dispatcher(f):
+            @functools.wraps(f)
+            def wrapper(*args, **kwargs):
+                self = args[0]
+                if f(*args, **kwargs):
+                    self.page = f.__name__.split('check_')[-1]
+                    return True
+                return False
+            return wrapper
+        module_name = os.path.basename(fun.__module__.split('.')[-1])
+        fu = bool_dispatcher(fun)
+        check_methods.setdefault(module_name, {})
+        check_methods[module_name][fu.__name__] = [fu, retry_times, check_pre_while_false, timeout]
+
+    if callable(retry_times):
+        call, retry_times = retry_times, 3
+        return outer(call)
+    return outer
 
 
 def specific_check(self, page, func):
@@ -101,34 +114,5 @@ def wrap_callbacks(page, func):
     return wrapper
 
 
-def retry_times(retry=3):
-    def outer(func):
-        @functools.wraps(func)
-        def inner(self, *args, **kwargs):
-            nonlocal retry
-            while retry > 0:
-                try:
-                    func(self, *args, **kwargs)
-                except Exception as e:
-                    print(str(e))
-                    if not self.hwnd:
-                        self.hwnd = win32gui.FindWindow('Qt5QWindowIcon', '崩坏3 - MuMu模拟器')
-                    win32gui.SetForegroundWindow(self.hwnd)
-                    print('剩余尝试次数', str(retry))
-                    retry -= 1
-                else:
-                    break
-                finally:
-                    if retry == 0:
-                        raise Exception('没办法得到正确的窗口')
-        return inner
-    if callable(retry):
-        retry, func = 3, retry
-        return outer(func)
-    return outer
 
 
-@page_checker_register
-def check_home(impact3):
-    return impact3.compare_color(1210, 676, 1, 'fd8a82') and impact3.compare_color(1226, 692, 0.8, '8ab33e') and \
-           not impact3.compare_color(734, 202, 1, '00c0fc') and not impact3.compare_color(747, 496, 1, 'ffe14b')

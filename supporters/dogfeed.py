@@ -30,15 +30,9 @@ class SupportDogFeedTeamwork(BaseFactory):
     use_callback = True
     use_check_method = True
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, impact3=None):
+        super().__init__(impact3)
         self.on_battle = False
-
-    def run(self, instance=None, *args, **kwargs):
-        while self.page_list and not self.over:
-            page = self.page_list.pop(0)
-            instance.check_page(page)
-        self.impact3.alive = False
 
     def home(self):
         time.sleep(0.2)
