@@ -29,7 +29,10 @@ class BaseFactory:
                 self.impact3.check_page(page)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type:
+            self.impact3.capture('error_' + str(time.time()).replace('.', '')[:12] + '.png')
         self.over = True
+
 
 class DMWrapper(object):
     """MuMu 模拟器   720 宽 * 1280高"""
@@ -54,17 +57,6 @@ class DMWrapper(object):
         self.dm.MoveTo(x*self.rate, y*self.rate)
         time.sleep(temp)
         self.dm.LeftClick()
-
-    def drag(self, x1, y1, x2, y2):
-        '拖拽，从x1,y1到x2,y2'
-        self.dm.MoveTo(x1, y1)
-        time.sleep(1)
-        self.dm.LeftDown()
-        time.sleep(10)
-        self.dm.MoveTo(x2, y2)
-        time.sleep(1)
-        self.dm.LeftUp()
-        time.sleep(1)
         
     def press_key(self, key_str=''):
         self.dm.KeyPress(int(self.key_map[key_str]))
@@ -83,7 +75,7 @@ class DMWrapper(object):
         compared_color = '|'.join(args) if args else ''
         if isinstance(tolerate, str):
             compared_color, tolerate = tolerate + '|' + compared_color if compared_color else tolerate, 0.95
-        return False if self.dm.CmpColor(x, y, compared_color, str(tolerate)) else True
+        return False if self.dm.CmpColor(x*self.rate, y*self.rate, compared_color, str(tolerate)) else True
 
     def fetch_hwnd(self):
         """取到模拟器内部屏幕控件的句柄, 并绑定窗口"""

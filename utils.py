@@ -58,8 +58,16 @@ def false_to_retry(retry=5, broken=3):
     return outer
 
 
-def page_checker_register(retry_times=3, check_pre_while_false=True, timeout=0):
-
+def page_checker_register(retry_times=0, use_callback=True, fail_to_check=list(), timeout=0, binding=list()):
+    """
+    装饰后的函数将会被注册并绑定
+    :param retry_times: 失败后重试次数
+    :param use_callback: 当成功的时候是否使用回调函数
+    :param fail_to_check: 当失败的时候检查那些页面，直到成功为止
+    :param timeout: 检查最长时间，如果超时会抛出一个超时错误
+    :param binding: 绑定函数。会按照列表的顺序执行所有里面的函数
+    :return:
+    """
     def outer(fun):
         def bool_dispatcher(f):
             @functools.wraps(f)
@@ -73,7 +81,7 @@ def page_checker_register(retry_times=3, check_pre_while_false=True, timeout=0):
         module_name = os.path.basename(fun.__module__.split('.')[-1])
         fu = bool_dispatcher(fun)
         check_methods.setdefault(module_name, {})
-        check_methods[module_name][fu.__name__] = [fu, retry_times, check_pre_while_false, timeout]
+        check_methods[module_name][fu.__name__] = [fu, retry_times, use_callback, fail_to_check, timeout, binding]
 
     if callable(retry_times):
         call, retry_times = retry_times, 3

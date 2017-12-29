@@ -22,23 +22,31 @@ class Impact3(DMWrapper):
         self.callbacks = {}
         self.check_methods = {}
         self.child_tasks = []
+        self.module_name = ''
+        self.temp_result = ''
 
     def bind_callback(self, factory):
         if not self.pages:
             raise NoPageListFound('you should modify you class attr \'page_list\' to enable the factory')
         for page in self.pages:
-            f_bound = self.callbacks.setdefault(self.factory_i, {})
+            f_bound = self.callbacks.setdefault(self.module_name, {})
             f_bound[page] = getattr(factory, page, None)
 
-    def check_page(self, page, callback=''):
+    def check_page(self, page, **kwargs):
         """当将callback传递为None时不会调用callback, 否则一定会在result为真的时候调用它对应的callback"""
-        if index_super(self.pages, page) <= (index_super(self.pages, self.page) if self.page else -1):
-            if page in self.pages[0]:
-                self.page = page
-            else:
-                return None
-        r_page, page = page, re.sub('\d+$|\W+$|\d+\W+$', '', page)
-        func = check_methods.get(self.factory, {}).get('check_' + page) or check_methods['utils'].get('check_' + page)
+        func, *others = \
+            check_methods.get(self.module_name).get('check_' + page) or check_methods['base'].get('check_' + page)
+        others = zip(others, ('retry_times', 'use_callback', 'fail_to_check', 'timeout', 'binding'))
+        retry_times, use_callback, fail_to_check, timeout, binding = [kwargs.get(n, v) for v, n in others]
+
+        result = func()
+        while not result and retry_times:
+            result = func()
+
+        if result and use_callback:
+            callback = self.callbacks.get(self.module_name, {}).get('page')
+            self.temp_result = callback() if callback else ''
+
         if r_page.endswith('?'):
             func = specific_check(self, r_page, func)
         if func:
@@ -65,10 +73,13 @@ class Impact3(DMWrapper):
     def start(self):
         while self.alive:
             for factory in self.factories:
+                self.pages = factory.page_list[::]
                 if factory.use_check_method:
-                    module_name = factory.__module__.split('.')[-1]
-                    for checker in check_methods[module_name].values():
+                    self.module_name = factory.__module__.split('.')[-1]
+                    for checker in check_methods[self.module_name].values():
                         checker[0] = partial(checker[0], self)
+                if factory.use_callback:
+                    self.bind_callback(factory)
                 self.factory_i = factory(self)
                 with self.factory_i as f:
                     f.run()

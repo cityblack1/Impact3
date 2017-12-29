@@ -3,36 +3,12 @@ import time
 from utils import page_checker_register
 from base import BaseFactory
 from logger import logger
-"""
-工厂类模块使用说明:
-
-1. 每个工厂类模块都抽象为一个工厂, 代表了一种辅助内一种功能的内部抽象, 比如"联机刷狗粮"
-
-2. 每个Support开头的类都是一个工厂类, 内部必须有一个静态run方法, 会在加载工厂后进行调用, 是辅助运行的主要逻辑所在
-   run 方法需要包含一个 instance 参数, 代表的是 Impact3Supporter 的实例
-   page_order 记录了每个页面的点击顺序
-
-2. 其余的检查页面的函数要以 check 开头, 另外的部分则是页面的名称, 要和 page_order 里面一致
-
-3. check函数必须被装饰器page_checker_register装饰。装饰器内部维护了一个字典，会注册每个模块下的每个check函数
-   同时page_checker_register装饰器会检查check函数返回值是否为True, 当为True时候会将 Impact3Supporter 中的self.page的值变成
-   check成功的页面
-   
-4. 所有注册后的 check 函数都会被注册到Impact3中, 只能通过 Impact3Supporter 的实例中的 check_page方法调用
-   比如, 你可以在 工厂类中的run方法中使用 instance.check_page('home'),相当于自动调用check_home的方法.
-"""
 
 
 class SupportDogFeedTeamwork(BaseFactory):
     """刷联机模式的狗粮"""
     page_list = ['home', 'download_music?', 'home?', 'world_map', 'teamwork', 'dog_feed', 'advanced_equipment',
                  'choose', 'battle']
-    use_callback = True
-    use_check_method = True
-
-    def __init__(self, impact3=None):
-        super().__init__(impact3)
-        self.on_battle = False
 
     def home(self):
         time.sleep(0.2)
@@ -139,33 +115,33 @@ class SupportDogFeedTeamwork(BaseFactory):
 
 
 @page_checker_register
-def check_download_music(impact3):
+def check_download_music(impact3, **kwargs):
     return impact3.compare_color(734, 202, 0.95, '00c0fc') and impact3.compare_color(747, 496, 0.95, 'ffe14b')
 
 
 @page_checker_register
-def check_world_map(impact3):
+def check_world_map(impact3, **kwargs):
     return impact3.compare_color(78, 21, 0.95, 'ffdf4d') and impact3.compare_color(1196, 685, 0.95, 'ffdd51')
 
 
 @page_checker_register
-def check_teamwork(impact3):
+def check_teamwork(impact3, **kwargs):
     return impact3.compare_color(598, 115, 'ffffff') or impact3.compare_color(697, 108, 'ffffff')
 
 
 @page_checker_register
-def check_dog_feed(impact3):
+def check_dog_feed(impact3, **kwargs):
     return impact3.compare_color(1232,105, 'ffffff') and impact3.compare_color(49,473, 'ffffff')
 
 
 @page_checker_register
-def check_advanced_equipment(impact3):
+def check_advanced_equipment(impact3, **kwargs):
     logger.info('开始检查高级装备页面')
     return impact3.compare_color(800,100, '0f6d93') and impact3.compare_color(317,383, 'ffffff')
 
 
 @page_checker_register
-def check_choose(impact3):
+def check_choose(impact3, **kwargs):
     if impact3.factory_instance.page_list[0] == impact3.pages[0]:
         return False
     logger.info('开始检查是否进入选人界面')
@@ -186,6 +162,6 @@ def check_choose(impact3):
 
 
 @page_checker_register
-def check_battle(impact3):
+def check_battle(impact3, **kwargs):
     logger.info('开始检查是否进入战斗界面')
     return True if impact3.factory_instance.on_battle else False
