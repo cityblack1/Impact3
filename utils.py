@@ -30,7 +30,10 @@ def index_super(li, em):
     try:
         return li.index(em)
     except:
-        return li.index(em+'?')
+        try:
+            return li.index(em+'?')
+        except:
+            return -1
 
 
 def false_to_retry(retry=5, broken=3):

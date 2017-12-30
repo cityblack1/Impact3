@@ -33,6 +33,8 @@ class SupportDogFeedTeamwork(BaseFactory):
     def __init__(self):
         super().__init__()
         self.on_battle = False
+        self.click_po = (637,371)
+        # self.click_po = (966,366)
 
     def run(self, instance=None, *args, **kwargs):
         while self.page_list and not self.over:
@@ -79,7 +81,7 @@ class SupportDogFeedTeamwork(BaseFactory):
         logger.info('进入协助作战页面')
         time.sleep(0.2)
         #self.impact3.click(966,366)
-        self.impact3.click(637,371)
+        self.impact3.click(*self.click_po)
         # self.impact3.click(1101,416)
         # time.sleep(2)
         # self.impact3.click(947,416)
@@ -93,7 +95,7 @@ class SupportDogFeedTeamwork(BaseFactory):
 
     def choose(self):
         logger.info('进入选人界面, 并装载新一轮的任务')
-        self.page_list += self.impact3.pages
+        self.page_list += self.impact3.pages[::]
         print(self.page_list)
         pre = time.time()
         while time.time() - pre < 60:
@@ -177,7 +179,12 @@ def check_choose(impact3):
     logger.info('开始检查是否进入选人界面')
     if impact3.compare_color(1020,666, '686e73'):
         logger.info('协作次数已经到达上限')
-        impact3.factory_instance.over = True
+        impact3.click(64,39)
+        time.sleep(3)
+        impact3.click(64,39)
+        impact3.factory_instance.click_po = (966,366)
+        impact3.factory_instance.page_list = impact3.pages[::]
+        # impact3.factory_instance.over = True
         return False
     pre = time.time()
     while time.time() - pre < 60:
@@ -186,7 +193,7 @@ def check_choose(impact3):
             logger.info('进入选人界面')
             return True
         time.sleep(1)
-    impact3.factory_instance.page_list = impact3.pages
+    impact3.factory_instance.page_list = impact3.pages[::]
     impact3.factory_instance.on_battle = False
     return False
 
