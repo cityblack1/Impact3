@@ -30,7 +30,7 @@ class BaseFactory:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
-            self.impact3.capture('error_' + str(time.time()).replace('.', '')[:12] + '.png')
+            self.impact3.capture('errors/' + str(time.time()).replace('.', '')[:12] + '.png')
         self.over = True
 
 
