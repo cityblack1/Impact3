@@ -7,7 +7,7 @@ from logger import logger
 
 class SupportDogFeedTeamwork(BaseFactory):
     """刷联机模式的狗粮"""
-    page_list = ['home', 'download_music?', 'home?', 'world_map', 'teamwork', 'dog_feed', 'advanced_equipment',
+    page_list = ['download_music', 'home', 'world_map', 'teamwork', 'dog_feed', 'advanced_equipment',
                  'choose', 'battle']
 
     def home(self):
@@ -113,55 +113,54 @@ class SupportDogFeedTeamwork(BaseFactory):
         print(self.page_list)
         self.on_battle = False
 
-
-@page_checker_register
-def check_download_music(impact3, **kwargs):
-    return impact3.compare_color(734, 202, 0.95, '00c0fc') and impact3.compare_color(747, 496, 0.95, 'ffe14b')
-
-
-@page_checker_register
-def check_world_map(impact3, **kwargs):
-    return impact3.compare_color(78, 21, 0.95, 'ffdf4d') and impact3.compare_color(1196, 685, 0.95, 'ffdd51')
+    @page_checker_register(retry_times=3, fail_to_check='home')
+    def check_download_music(self):
+        return self.impact3.compare_color(734, 202, 0.95, '00c0fc') and self.impact3.compare_color(747, 496, 0.95, 'ffe14b')
 
 
-@page_checker_register
-def check_teamwork(impact3, **kwargs):
-    return impact3.compare_color(598, 115, 'ffffff') or impact3.compare_color(697, 108, 'ffffff')
-
-
-@page_checker_register
-def check_dog_feed(impact3, **kwargs):
-    return impact3.compare_color(1232,105, 'ffffff') and impact3.compare_color(49,473, 'ffffff')
-
-
-@page_checker_register
-def check_advanced_equipment(impact3, **kwargs):
-    logger.info('开始检查高级装备页面')
-    return impact3.compare_color(800,100, '0f6d93') and impact3.compare_color(317,383, 'ffffff')
-
-
-@page_checker_register
-def check_choose(impact3, **kwargs):
-    if impact3.factory_instance.page_list[0] == impact3.pages[0]:
-        return False
-    logger.info('开始检查是否进入选人界面')
-    if impact3.compare_color(1020,666, '686e73'):
-        logger.info('协作次数已经到达上限')
-        impact3.factory_instance.over = True
-        return False
-    pre = time.time()
-    while time.time() - pre < 60:
-        if impact3.compare_color(694,656,0.8, 'ffde4a') or impact3.compare_color(769,675,0.8, 'ffe14b') or impact3.compare_color(635,640, 0.8,'9fd03b')\
-                or impact3.compare_color(633,640,0.8, 'a2d23b'):
-            logger.info('进入选人界面')
-            return True
-        time.sleep(1)
-    impact3.factory_instance.page_list = impact3.pages
-    impact3.factory_instance.on_battle = False
-    return False
-
-
-@page_checker_register
-def check_battle(impact3, **kwargs):
-    logger.info('开始检查是否进入战斗界面')
-    return True if impact3.factory_instance.on_battle else False
+# @page_checker_register
+# def check_world_map(impact3):
+#     return impact3.compare_color(78, 21, 0.95, 'ffdf4d') and impact3.compare_color(1196, 685, 0.95, 'ffdd51')
+#
+#
+# @page_checker_register
+# def check_teamwork(impact3):
+#     return impact3.compare_color(598, 115, 'ffffff') or impact3.compare_color(697, 108, 'ffffff')
+#
+#
+# @page_checker_register
+# def check_dog_feed(impact3):
+#     return impact3.compare_color(1232,105, 'ffffff') and impact3.compare_color(49,473, 'ffffff')
+#
+#
+# @page_checker_register
+# def check_advanced_equipment(impact3):
+#     logger.info('开始检查高级装备页面')
+#     return impact3.compare_color(800,100, '0f6d93') and impact3.compare_color(317,383, 'ffffff')
+#
+#
+# @page_checker_register
+# def check_choose(impact3, **kwargs):
+#     if impact3.factory_instance.page_list[0] == impact3.pages[0]:
+#         return False
+#     logger.info('开始检查是否进入选人界面')
+#     if impact3.compare_color(1020,666, '686e73'):
+#         logger.info('协作次数已经到达上限')
+#         impact3.factory_instance.over = True
+#         return False
+#     pre = time.time()
+#     while time.time() - pre < 60:
+#         if impact3.compare_color(694,656,0.8, 'ffde4a') or impact3.compare_color(769,675,0.8, 'ffe14b') or impact3.compare_color(635,640, 0.8,'9fd03b')\
+#                 or impact3.compare_color(633,640,0.8, 'a2d23b'):
+#             logger.info('进入选人界面')
+#             return True
+#         time.sleep(1)
+#     impact3.factory_instance.page_list = impact3.pages
+#     impact3.factory_instance.on_battle = False
+#     return False
+#
+#
+# @page_checker_register
+# def check_battle(impact3, **kwargs):
+#     logger.info('开始检查是否进入战斗界面')
+#     return True if impact3.factory_instance.on_battle else False

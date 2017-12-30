@@ -2,7 +2,6 @@ import threading
 import time
 import re
 import typing
-
 from base import DMWrapper
 from supporters.dogfeed import SupportDogFeedTeamwork
 from utils import check_methods, specific_check, wrap_callbacks, false_to_retry, wrap_run, index_super
@@ -33,7 +32,7 @@ class Impact3(DMWrapper):
             raise NoPageListFound('you should modify you class attr \'page_list\' to enable the factory')
         for page in self.pages:
             f_bound = self.callbacks.setdefault(self.module_name, {})
-            f_bound[page] = getattr(factory, page, None)
+            f_bound[page] = partial(getattr(factory, page, None), self.factory_i)
 
     def check_page(self, page, retry_times=None, use_callback=None, fail_to_check=None, timeout=None, binding=None):
         """当将callback传递为None时不会调用callback, 否则一定会在result为真的时候调用它对应的callback"""
@@ -42,34 +41,22 @@ class Impact3(DMWrapper):
         retry_times, use_callback, fail_to_check, timeout, binding = map(lambda x: x[0] if x[0] is not None else x[1], packed)
         result = func()
         while not result and retry_times:
-            logger.info(func.__name__ + '的检测失败, 重新检测, 剩余重试次数为' + str(retry_times))
+            logger.info('check_' + page + '的检测失败, 重新检测, 剩余重试次数为' + str(retry_times))
             time.sleep(0.3)
             result = func()
             retry_times -= 1
         if result and use_callback:
-            callback = self.callbacks.get(self.module_name, {}).get('page')
+            callback = self.callbacks.get(self.module_name, {}).get(page)
             _ = callback() if callback else ''
             logger.info('回调执行成功, 返回值为' + str(_))
-        if not result and isinstance(fail_to_check, Sequence):
-            self.check_page(fail_to_check, 0, True, list(), -1, list()) if fail_to_check[0] == '-' else \
-                self.check_page(fail_to_check, 0, False, list(), -1, list())
+        if not result and isinstance(fail_to_check, str):
+            self.check_page(fail_to_check, 0, False, list(), -1, list()) if fail_to_check[0] == '-' else \
+                self.check_page(fail_to_check, 0, True, list(), -1, list())
         elif not result:
             for f_checker in fail_to_check:
-                self.check_page(f_checker, 0, True, list(), -1, list()) if fail_to_check[0] == '-' else\
-                    self.check_page(fail_to_check, 0, False, list(), -1, list())
-
-        if func:
-            result, callback = func(), wrap_callbacks(r_page, self.callbacks.get(self.factory, {}).get(page.replace('?', ''), callback) if callback is not None else None)
-            if result and r_page.endswith('?') and r_page in self.pages:
-                callback()
-                if index_super(self.pages, r_page) < index_super(self.pages, self.page):
-                    return None
-                return result
-            time.sleep(0.1)
-            callback() if callback and result else None
-            self.page = r_page if result else self.page or page
-            logger.info('the result of check_{} is {}'.format(page, str(result)))
-            return result
+                self.check_page(f_checker, 0, False, list(), -1, list()) if fail_to_check[0] == '-' else\
+                    self.check_page(fail_to_check, 0, True, list(), -1, list())
+        return result
         raise InvalidCheckMethod('the check method of Page %s  can\'t be found' % page)
 
     def gen_threading(self, func, *args, name=None, **kwargs):
@@ -83,20 +70,20 @@ class Impact3(DMWrapper):
         while self.alive:
             for factory in self.factories:
                 self.pages = factory.page_list[::]
+                self.module_name = factory.__module__.split('.')[-1]
+                self.factory_i = factory(self)
                 if factory.use_check_method:
-                    self.module_name = factory.__module__.split('.')[-1]
                     for checker in check_methods[self.module_name].values():
-                        checker[0] = partial(checker[0], self)
+                        checker[0] = partial(checker[0], self.factory_i)
                 if factory.use_callback:
                     self.bind_callback(factory)
-                self.factory_i = factory(self)
                 with self.factory_i as f:
                     f.run()
             self.alive = False
 
 
 if __name__ == '__main__':
-    a = Impact3([SupportDogFeedTeamwork])
-    a.start()
+    impact3 = Impact3([SupportDogFeedTeamwork])
+    impact3.start()
     # a.compare_color(1210, 676, 'fd8a82')
     print()

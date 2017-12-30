@@ -76,7 +76,10 @@ def page_checker_register(retry_times=0, use_callback=True, fail_to_check=list()
                 self = args[0]
                 logger.info('开始执行检查函数' + f.__name__)
                 if f(*args, **kwargs):
-                    self.page = f.__name__.split('check_')[-1]
+                    try:
+                        self.impact3.page = f.__name__.split('check_')[-1]
+                    except AttributeError as e:
+                        self.page = f.__name__.split('check_')[-1]
                     logger.info(f.__name__ + '的结果是True')
                     return True
                 logger.info(f.__name__ +  '的结果是False')
