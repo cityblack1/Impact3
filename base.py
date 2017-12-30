@@ -126,7 +126,7 @@ class DMWrapper(object):
         return self.width / 1280
 
 
-@page_checker_register
+@page_checker_register(retry_times=2)
 def check_home(impact3):
     return impact3.compare_color(1210, 676, 1, 'fd8a82') and impact3.compare_color(1226, 692, 0.8, '8ab33e') and \
            not impact3.compare_color(734, 202, 1, '00c0fc') and not impact3.compare_color(747, 496, 1, 'ffe14b')

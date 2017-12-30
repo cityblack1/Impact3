@@ -58,12 +58,13 @@ def false_to_retry(retry=5, broken=3):
     return outer
 
 
-def page_checker_register(retry_times=0, use_callback=True, fail_to_check=list(), timeout=0, binding=list()):
+def page_checker_register(retry_times=0, use_callback=True, fail_to_check=list(), timeout=-1, binding=list()):
     """
-    装饰后的函数将会被注册并绑定
+    装饰后的函数将会被注册并绑定。
     :param retry_times: 失败后重试次数
     :param use_callback: 当成功的时候是否使用回调函数
-    :param fail_to_check: 当失败的时候检查那些页面，直到成功为止
+    :param fail_to_check: 字符串列表或字符串, 当失败的时候检查那些页面，直到成功为止, 字符串all代表全部检查, None代表不检查, 列表代表顺序检查.
+            默认执行回调, 如果不想执行回调需要在每个字符串前加上 '-'
     :param timeout: 检查最长时间，如果超时会抛出一个超时错误
     :param binding: 绑定函数。会按照列表的顺序执行所有里面的函数
     :return:
@@ -73,9 +74,12 @@ def page_checker_register(retry_times=0, use_callback=True, fail_to_check=list()
             @functools.wraps(f)
             def wrapper(*args, **kwargs):
                 self = args[0]
+                logger.info('开始执行检查函数' + f.__name__)
                 if f(*args, **kwargs):
                     self.page = f.__name__.split('check_')[-1]
+                    logger.info(f.__name__ + '的结果是True')
                     return True
+                logger.info(f.__name__ +  '的结果是False')
                 return False
             return wrapper
         module_name = os.path.basename(fun.__module__.split('.')[-1])
@@ -84,7 +88,7 @@ def page_checker_register(retry_times=0, use_callback=True, fail_to_check=list()
         check_methods[module_name][fu.__name__] = [fu, retry_times, use_callback, fail_to_check, timeout, binding]
 
     if callable(retry_times):
-        call, retry_times = retry_times, 3
+        call, retry_times = retry_times, 0
         return outer(call)
     return outer
 

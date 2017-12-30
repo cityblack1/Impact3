@@ -1,6 +1,7 @@
 import threading
 import time
 import re
+import typing
 
 from base import DMWrapper
 from supporters.dogfeed import SupportDogFeedTeamwork
@@ -8,6 +9,7 @@ from utils import check_methods, specific_check, wrap_callbacks, false_to_retry,
 from functools import partial
 from exceptions import InvalidCheckMethod, NoPageListFound
 from logger import logger
+from collections.abc import Sequence, Iterable
 
 
 class Impact3(DMWrapper):
@@ -20,10 +22,11 @@ class Impact3(DMWrapper):
         self.pages = []
         self.order_list = []
         self.callbacks = {}
-        self.check_methods = {}
         self.child_tasks = []
         self.module_name = ''
         self.temp_result = ''
+        for fl in check_methods['base'].values():
+            fl[0] = partial(fl[0], self)
 
     def bind_callback(self, factory):
         if not self.pages:
@@ -32,23 +35,29 @@ class Impact3(DMWrapper):
             f_bound = self.callbacks.setdefault(self.module_name, {})
             f_bound[page] = getattr(factory, page, None)
 
-    def check_page(self, page, **kwargs):
+    def check_page(self, page, retry_times=None, use_callback=None, fail_to_check=None, timeout=None, binding=None):
         """当将callback传递为None时不会调用callback, 否则一定会在result为真的时候调用它对应的callback"""
-        func, *others = \
-            check_methods.get(self.module_name).get('check_' + page) or check_methods['base'].get('check_' + page)
-        others = zip(others, ('retry_times', 'use_callback', 'fail_to_check', 'timeout', 'binding'))
-        retry_times, use_callback, fail_to_check, timeout, binding = [kwargs.get(n, v) for v, n in others]
-
+        func, *others = check_methods.get(self.module_name).get('check_' + page) or check_methods['base'].get('check_' + page)
+        packed = zip([retry_times, use_callback, fail_to_check, timeout, binding], others)
+        retry_times, use_callback, fail_to_check, timeout, binding = map(lambda x: x[0] if x[0] is not None else x[1], packed)
         result = func()
         while not result and retry_times:
+            logger.info(func.__name__ + '的检测失败, 重新检测, 剩余重试次数为' + str(retry_times))
+            time.sleep(0.3)
             result = func()
-
+            retry_times -= 1
         if result and use_callback:
             callback = self.callbacks.get(self.module_name, {}).get('page')
-            self.temp_result = callback() if callback else ''
+            _ = callback() if callback else ''
+            logger.info('回调执行成功, 返回值为' + str(_))
+        if not result and isinstance(fail_to_check, Sequence):
+            self.check_page(fail_to_check, 0, True, list(), -1, list()) if fail_to_check[0] == '-' else \
+                self.check_page(fail_to_check, 0, False, list(), -1, list())
+        elif not result:
+            for f_checker in fail_to_check:
+                self.check_page(f_checker, 0, True, list(), -1, list()) if fail_to_check[0] == '-' else\
+                    self.check_page(fail_to_check, 0, False, list(), -1, list())
 
-        if r_page.endswith('?'):
-            func = specific_check(self, r_page, func)
         if func:
             result, callback = func(), wrap_callbacks(r_page, self.callbacks.get(self.factory, {}).get(page.replace('?', ''), callback) if callback is not None else None)
             if result and r_page.endswith('?') and r_page in self.pages:
