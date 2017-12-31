@@ -3,17 +3,18 @@ import os
 
 from importlib import import_module
 from collections.abc import Sequence
-from utils import TimeoutThreading
+from utils import TimeoutThreading, get_fun_name
 from base import DMWrapper
 from utils import check_methods
 from functools import partial
 from exceptions import InvalidCheckMethod, NoPageListFound
 from logger import logger
+"""工厂执行者, 会自动寻找supporters下面的所有工厂并依次执行"""
 
 
 class Impact3(DMWrapper):
     """MuMu 模拟器   720 宽 * 1280高"""
-    def __init__(self, factories=None):
+    def __init__(self, factories=list()):
         super().__init__()
         self.alive = True
         self.factories = factories
@@ -25,9 +26,7 @@ class Impact3(DMWrapper):
         self.temp_result = ''
         self.child_tasks = []
         for fl in check_methods.get('base', {}).values():
-            _ = fl[0].__name__
             fl[0] = partial(fl[0], self)
-            fl[0].__name__ = _
 
     def bind_callback(self, factory):
         if not self.pages:
@@ -83,15 +82,16 @@ class Impact3(DMWrapper):
                     break
         return result
 
-    def gen_threading(self, func, args=(), kwargs=None, name=None, timeout=None, ):
-        name = func.__name__ if not name else name
+    def gen_threading(self, func, args=(), kwargs=None, name=None, timeout=None):
+        name = get_fun_name(func) if not name else name
         if self.alive and self.factory_i.over:
             thread = TimeoutThreading(target=func, args=args, kwargs=kwargs, name=name)
             thread.setDaemon(True)
             thread.start()
             thread.join(timeout)
             result = thread.get_result()
-            thread.raise_error(TimeoutError)
+            if thread.is_alive():
+                thread.raise_error(TimeoutError)
             logger.error('执行{}的时候时间超时'.format(name))
             return result
 
@@ -99,14 +99,14 @@ class Impact3(DMWrapper):
         self.load_all_factories() if not self.factories else None
         while self.alive:
             for factory in self.factories:
+                if not self.alive:
+                    break
                 self.pages = factory.page_list[::]
                 self.module_name = factory.__module__.split('.')[-1]
                 self.factory_i = factory(self)
                 if factory.use_check_method:
                     for checker in check_methods[self.module_name].values():
-                        _ = checker[0].__name__
                         checker[0] = partial(checker[0], self.factory_i)
-                        checker[0].__name__ = _
                 if factory.use_callback:
                     self.bind_callback(factory)
                 with self.factory_i as f:

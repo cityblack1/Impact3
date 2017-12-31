@@ -7,7 +7,7 @@ from logger import logger
 
 class SupportDogFeedTeamwork(BaseFactory):
     """刷联机模式的狗粮"""
-    page_list = ['download_music', 'home', 'world_map', 'teamwork', 'dog_feed', 'advanced_equipment',
+    page_list = ['home', 'download_music', 'world_map', 'teamwork', 'dog_feed', 'advanced_equipment',
                  'choose', 'battle']
 
     def home(self):
@@ -113,7 +113,7 @@ class SupportDogFeedTeamwork(BaseFactory):
         print(self.page_list)
         self.on_battle = False
 
-    @page_checker_register(retry_times=3, fail_to_check='home')
+    @page_checker_register(retry_times=0, fail_to_check=['home', 'check_world_map'])
     def check_download_music(self):
         return self.impact3.compare_color(734, 202, 0.95, '00c0fc') and self.impact3.compare_color(747, 496, 0.95, 'ffe14b')
 

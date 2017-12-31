@@ -9,6 +9,8 @@ from logger import logger
 from exceptions import HandlerError, SizeError, PluginError
 from utils import page_checker_register
 
+"""这个模块定义了框架的基类和基础的check方法"""
+
 
 class BaseFactory:
     page_list = []
@@ -25,13 +27,20 @@ class BaseFactory:
 
     def run(self, *args, **kwargs):
         while not self.over and self.page_list:
-            for page in self.page_list:
+            for ind, page in enumerate(self.page_list):
+                if self.over:
+                    break
+                if ind < self.impact3.pages.index(page):
+                    continue
                 self.impact3.check_page(page)
+        self.over = True
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
             self.impact3.capture('errors/' + str(time.time()).replace('.', '')[:12] + '.png')
         self.over = True
+        print('释放绑定窗口')
+        self.impact3.dm.UnBindWindow()
 
 
 class DMWrapper(object):
@@ -44,37 +53,75 @@ class DMWrapper(object):
         self.set_path()
         self.width, self.height = self.dm.GetClientSize(self.hwnd)[1:]
         self.rate = self.get_size_rate()
-        self.key_map = DMWrapper.get_key_map()
-
-    @staticmethod
-    def get_key_map():
-        """得到键盘按键的码位映射"""
-        with open('keyMap') as f:
-            key_map = f.read()
-            return dict(((x.strip().replace('"', ''), y.strip()) for x, y in (i.split(',  ') for i in key_map.split('\n'))))
 
     def click(self, x=0, y=0, temp=0.05):
         self.dm.MoveTo(x*self.rate, y*self.rate)
         time.sleep(temp)
         self.dm.LeftClick()
-        
+        time.sleep(0.01)
+
+    def find_str(self, x1, y1, x2, y2, color='', sim=0.5):
+        x1, y1, x2, y2 = x1 * self.rate, y1 * self.rate, x2 * self.rate, y2 * self.rate
+        text = self.dm.Ocr(x1, y1, x2, y2, color, sim)
+        return text
+
+    def load_pic(self, filename):
+        """将指定的图片加入缓存, 0失败, 1成功"""
+        pass
+
+    def find_pic(self, x1, y1, x2, y2, filename, delta_color, sim, dir):
+        """查找区域内的所有符合图片的坐标, 返回格式id,x,y|id,x,y..|id,x,y, id是filename的排序"""
+        pass
+
+    def get_ave_RGB(self, x1, y1, x2, y2):
+        """返回区域内的颜色均值"""
+        pass
+
     def press_key(self, key_str=''):
-        self.dm.KeyPress(int(self.key_map[key_str]))
+        self.dm.KeyPressChar(key_str)
+        time.sleep(0.01)
+
+    def wheel_down(self):
+        self.dm.WheelDown()
+        time.sleep(0.01)
+
+    def wheel_up(self):
+        self.dm.WheelUp()
+        time.sleep(0.01)
 
     def set_path(self, p=os.getcwd()):
         self.dm.SetPath(p)
 
     def capture(self, fn=hashlib.md5(bytes(str(time.time()), encoding='ascii')).hexdigest() + '.png'):
         self.dm.CapturePng(0, 0, 1280*self.rate, 720*self.rate, fn)
+        time.sleep(0.01)
+
+    def drag(self, x1, y1, x2, y2, t=2):
+        x1, y1, x2, y2 = x1*self.rate, y1*self.rate, x2*self.rate, y2*self.rate
+        self.dm.MoveTo(x1, y1)
+        self.dm.LeftDown()
+        time.sleep(t)
+        t /= abs((x1 - x2) / 20)
+        path = -20 if x1 > x2 else 20
+        for i in range(int(x1), int(x2), path):
+            x1, _ = path + x1, x1
+            y1 = y1 * (x1 / _)
+            self.dm.MoveTo(x1, y1)
+            time.sleep(t)
+        self.dm.MoveTo(x2, y2)
+        self.dm.LeftUp()
+        time.sleep(0.01)
 
     def get_color(self, *args):
         x, y = args if args else self.dm.GetCursorPos()[1:]
+        time.sleep(0.01)
         return self.dm.GetColor(x, y)
 
     def compare_color(self, x, y, tolerate, *args):
         compared_color = '|'.join(args) if args else ''
         if isinstance(tolerate, str):
             compared_color, tolerate = tolerate + '|' + compared_color if compared_color else tolerate, 0.95
+        time.sleep(0.01)
         return False if self.dm.CmpColor(x*self.rate, y*self.rate, compared_color, str(tolerate)) else True
 
     def fetch_hwnd(self):
@@ -126,7 +173,7 @@ class DMWrapper(object):
         return self.width / 1280
 
 
-@page_checker_register(retry_times=2)
+@page_checker_register(retry_times=1)
 def check_home(impact3):
     return impact3.compare_color(1210, 676, 1, 'fd8a82') and impact3.compare_color(1226, 692, 0.8, '8ab33e') and \
            not impact3.compare_color(734, 202, 1, '00c0fc') and not impact3.compare_color(747, 496, 1, 'ffe14b')
