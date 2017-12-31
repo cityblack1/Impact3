@@ -7,15 +7,18 @@ import inspect
 
 from logger import logger
 from exceptions import HandlerError, SizeError, PluginError
-from utils import page_checker_register
+from utils import page_checker_register, super_index
 
 """这个模块定义了框架的基类和基础的check方法"""
 
 
 class BaseFactory:
+    is_active = True
+    current = 0
     page_list = []
     use_callback = True
     use_check_method = True
+    pass_list = set()
 
     def __enter__(self):
         self.over = False
@@ -28,12 +31,22 @@ class BaseFactory:
     def run(self, *args, **kwargs):
         while not self.over and self.page_list:
             for ind, page in enumerate(self.page_list):
+                self.current = ind
                 if self.over:
                     break
-                if ind < self.impact3.pages.index(page):
+                print(page)
+                print(self.pass_list)
+                if page in self.pass_list:
                     continue
-                self.impact3.check_page(page)
+                else:
+                    self.impact3.check_page(page)
+                if ind > super_index(self.impact3.pages, self.impact3.page):
+                    self.impact3.check_page(page, retry_times=0, binding=[], fail_to_check=[], use_callback=True)
+            self.impact3.page = ''
         self.over = True
+
+    def add_pass(self, page):
+        self.pass_list.add(page)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
@@ -76,6 +89,12 @@ class DMWrapper(object):
     def get_ave_RGB(self, x1, y1, x2, y2):
         """返回区域内的颜色均值"""
         pass
+
+    def press_key_long(self, key_str='', t=0.1):
+        self.dm.KeyDownChar(key_str)
+        time.sleep(t)
+        self.dm.KeyUpChar(key_str)
+        time.sleep(0.01)
 
     def press_key(self, key_str=''):
         self.dm.KeyPressChar(key_str)

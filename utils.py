@@ -33,13 +33,20 @@ def page_checker_register(retry_times=0, use_callback=True, fail_to_check=list()
     装饰后的函数/方法将会被注册并绑定, 会被注册到check_methods中,以便被框架调用。
     :param retry_times: 失败后重试次数
     :param use_callback: 当成功的时候是否使用回调函数
-    :param fail_to_check: 传递为页面名称的字符串或方法/函数或包含两者的列表, 当失败的时候检查那些页面，
-            直到其中一次检查成功或者列表循环到尽头才会终止检查
-            默认执行回调, 如果不想执行回调需要在每个字符串前加上 '-', 字符串的方式不能精确控制每个函数, 
-            可以通过传递 函数/方法指针 的列表实现精确控制或者自定义的逻辑
-            请使用lambda或者partial自行封存参数
+    :param fail_to_check: 字符串或者函数的字符串表示或者包含两者的列表
+            特殊字符串: all, [所有的page的名字], [所有的page的名字前面再加上 - ]
+                        比如 'all', '-home', 'home'
+                        all 相当于执行所有page的check_page函数
+                        -home相当于执行check_page(home),但是不进行回调
+                        home是执行check_page(home)并且成功后进行回调函数
+                        
+            函数字符串: '比如self.pass_page('home')', 相当于执行 self.pass_page('home') 
+                        和正常语法一样只是需要用字符串的形式表示                                
+            *** 会按照列表顺序执行, 直到返回 True 或者等效结果, 当为 False 或等效结果时会继续向下执行            
+            *** 注意, func必须是字符串, 因为python的装饰器不能在运行的时候动态加载self....
     :param timeout: 检查最长时间，如果超时会抛出一个超时错误
-    :param binding: 绑定函数。会按照列表的顺序执行所有里面的函数
+    :param binding: 成功后的绑定函数。和fail_to_check一样, 需要一个字符串或字符串列表, 只不过没有特殊字符串
+            当result为True或者其他等效值的时候会执行
     :return: 一个被注册后的函数/方法
     """
     def outer(fun):
@@ -50,7 +57,8 @@ def page_checker_register(retry_times=0, use_callback=True, fail_to_check=list()
                 logger.info('开始执行检查函数' + f.__name__)
                 if f(*args, **kwargs):
                     try:
-                        self.impact3.page = f.__name__.split('check_')[-1]
+                        if hasattr(self.impact3, 'page'):
+                            self.impact3.page = f.__name__.split('check_')[-1]
                     except AttributeError as e:
                         self.page = f.__name__.split('check_')[-1]
                     logger.info(f.__name__ + '的结果是True')
@@ -136,14 +144,15 @@ def time_checker(timeout=None, retry=0, callback_s=None, callback_f=None):
                 logger.error('没有拿到结果, 开始重试, 剩余重试次数{}'.format(retry))
                 result = threading_timeout(fun, timeout, *args, **kwargs)
                 retry -= 1
-            logger.info('执行函数{}成功, 开始执行回调函数'.format('成功' if result else '失败'))
+            logger.info('执行函数{}{}'.format(get_fun_name(fun), '成功' if result else '失败'))
             r = None
             if result and callback_s:
                 r = callable_dispatch(callback_s)
-            if result and callback_f:
+                logger.info('执行{}的回调函数成功, 结果是{}'.format(get_fun_name(fun), r))
+            if not result and callback_f:
                 r = callable_dispatch(callback_f)
-            logger.info('执行{}的回调函数成功, 结果是{}'.format(get_fun_name(fun), r))
-            return result
+                logger.info('执行{}的回调函数成功, 结果是{}'.format(get_fun_name(fun), r))
+            return r
         return wrapper
     return outer
 
@@ -183,5 +192,12 @@ def callable_dispatch(fun):
 @func_error_wrapper
 def get_fun_name(fun):
     if isinstance(fun, functools.partial):
-        return fun.func.__name___
+        return fun.func.__name__
     return fun.__name__
+
+
+def super_index(li, page):
+    try:
+        return li.index(page)
+    except:
+        return -1

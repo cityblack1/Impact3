@@ -19,12 +19,14 @@ class Impact3(DMWrapper):
         self.alive = True
         self.factories = factories
         self.factory_i = None
+        self.page = ''
         self.pages = []
         self.order_list = []
         self.callbacks = {}
         self.module_name = ''
         self.temp_result = ''
         self.child_tasks = []
+        self.check_methods = check_methods
         for fl in check_methods.get('base', {}).values():
             fl[0] = partial(fl[0], self)
 
@@ -56,35 +58,48 @@ class Impact3(DMWrapper):
         result = self.dispatch_run(func, timeout)
         while not result and retry_times:
             logger.info('check_' + page + '的检测失败, 重新检测, 剩余重试次数为' + str(retry_times))
-            time.sleep(0.3)
+            time.sleep(0.8)
             result = self.dispatch_run(func, timeout)
             retry_times -= 1
         if result and use_callback:
             callback = self.callbacks.get(self.module_name, {}).get(page)
             _ = callback() if callback else ''
-            logger.info('回调执行成功, 返回值为' + str(_))
+            logger.info('check_{}的回调执行成功, 返回值为'.format(page) + str(_))
         if not result and fail_to_check == 'all':
             for p in self.pages:
                 self.check_page(p, 0, True, list(), None, list())
-        elif callable(fail_to_check):
-            fail_to_check()
-        elif not result and isinstance(fail_to_check, str):
-            self.check_page(fail_to_check, 0, False, list(), None, list()) if fail_to_check[0] == '-' else \
-                self.check_page(fail_to_check, 0, True, list(), None, list())
-        elif not result and isinstance(fail_to_check, Sequence):
-            for f_checker in fail_to_check:
-                if callable(f_checker):
-                    r = f_checker()
+        elif not result and fail_to_check:
+            if isinstance(fail_to_check, str):
+                fail_to_check = [fail_to_check]
+            for fail_checker in fail_to_check:
+                logger.info('开始执行{}的失败检查函数{}'.format(page, fail_checker))
+                if fail_checker[1:] if fail_checker[0] == '-' else fail_checker in self.pages:
+                    r = self.check_page(fail_checker, 0, False, list(), None, list()) if fail_checker[0] == '-' else \
+                        self.check_page(fail_checker, 0, True, list(), None, list())
+                    logger.info('check_{}的失败检查的结果是{}'.format(fail_checker, r))
                 else:
-                    r = self.check_page(f_checker, 0, False, list(), -1, list()) if fail_to_check[0] == '-' else \
-                        self.check_page(fail_to_check, 0, True, list(), -1, list())
+                    if 'self.' in fail_checker:
+                        r = eval(fail_checker.replace('self.', 'self.factory_i.'))
+                    else:
+                        r = eval('self.factory_i.__module__.' + fail_checker)
+                    logger.info('check_{}的失败检查的结果是{}'.format(fail_checker, r))
                 if r:
                     break
+        if binding and result:
+            if isinstance(binding, str):
+                binding = [binding]
+            for bind in binding:
+                logger.info('开始执行{}的绑定函数{}'.format(page, bind))
+                if 'self.' in bind:
+                    r = eval(bind.replace('self.', 'self.factory_i.'))
+                else:
+                    r = eval('self.factory_i.__module__.' + bind)
+                logger.info('绑定函数{}的结果是{}'.format(bind, r))
         return result
 
     def gen_threading(self, func, args=(), kwargs=None, name=None, timeout=None):
         name = get_fun_name(func) if not name else name
-        if self.alive and self.factory_i.over:
+        if self.alive and not self.factory_i.over:
             thread = TimeoutThreading(target=func, args=args, kwargs=kwargs, name=name)
             thread.setDaemon(True)
             thread.start()
@@ -92,14 +107,14 @@ class Impact3(DMWrapper):
             result = thread.get_result()
             if thread.is_alive():
                 thread.raise_error(TimeoutError)
-            logger.error('执行{}的时候时间超时'.format(name))
+                logger.error('执行{}的时候时间超时'.format(name))
             return result
 
     def start(self):
         self.load_all_factories() if not self.factories else None
         while self.alive:
             for factory in self.factories:
-                if not self.alive:
+                if not self.alive or not factory.is_active:
                     break
                 self.pages = factory.page_list[::]
                 self.module_name = factory.__module__.split('.')[-1]
@@ -111,6 +126,8 @@ class Impact3(DMWrapper):
                     self.bind_callback(factory)
                 with self.factory_i as f:
                     f.run()
+                if self.factory_i.over:
+                    logger.info('{}的工厂执行完毕'.format(factory))
             self.alive = False
 
     def load_all_factories(self):
@@ -127,5 +144,4 @@ class Impact3(DMWrapper):
 if __name__ == '__main__':
     impact3 = Impact3()
     impact3.start()
-    # a.compare_color(1210, 676, 'fd8a82')
     print()
