@@ -154,7 +154,7 @@ class SupportDogFeedTeamwork(BaseFactory):
         logger.info('本轮结束, 即将开始下一轮')
         self.on_battle = False
 
-    @page_checker_register(retry_times=1, fail_to_check=['self.add_pass("download_music")'], binding="self.add_pass('home')")
+    @page_checker_register(retry_times=1, binding="self.add_pass('home')")
     def check_home(self):
         return self.impact3.compare_color(1210, 676, 1, 'fd8a82') and self.impact3.compare_color(1226, 692, 0.8, '8ab33e') and \
                not self.impact3.compare_color(734, 202, 1, '00c0fc') and not self.impact3.compare_color(747, 496, 1, 'ffe14b')

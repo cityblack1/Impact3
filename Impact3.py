@@ -107,7 +107,7 @@ class Impact3(DMWrapper):
             result = thread.get_result()
             if thread.is_alive():
                 thread.raise_error(TimeoutError)
-                logger.error('执行{}的时候时间超时'.format(name))
+                logger.info('执行{}的时候时间超时'.format(name))
             return result
 
     def start(self):
@@ -115,7 +115,7 @@ class Impact3(DMWrapper):
         while self.alive:
             for factory in self.factories:
                 if not self.alive or not factory.is_active:
-                    break
+                    continue
                 self.pages = factory.page_list[::]
                 self.module_name = factory.__module__.split('.')[-1]
                 self.factory_i = factory(self)
