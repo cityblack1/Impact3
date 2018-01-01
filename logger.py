@@ -9,7 +9,7 @@ console = logging.StreamHandler()
 console.setFormatter(formatter)
 
 file = logging.FileHandler('log.txt')
-file.setLevel(logging.INFO)
+file.setLevel(logging.WARNING)
 file.setFormatter(formatter)
 
 logger.addHandler(file)
